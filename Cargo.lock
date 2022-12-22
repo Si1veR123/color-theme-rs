@@ -425,7 +425,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-palette_from_image"
+name = "rust-palette-from-image"
 version = "0.1.0"
 dependencies = [
  "image",
