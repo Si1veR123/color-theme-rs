@@ -1,0 +1,15 @@
+[package]
+name = "rust-palette_from_image"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+name = "palette_from_image"
+
+[dependencies]
+image = "0.24.5"
+
+[[bin]]
+name = "colour_theme"
+path = "src/bin.rs"
