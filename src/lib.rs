@@ -58,7 +58,6 @@ fn average_pixels(pixels: &[Rgb<u8>]) -> Rgb<u8> {
 
 
 fn bucket_from_image_mut(image: &mut [u8], bucket_size: usize, bucket_index: usize) -> &mut [Rgb<u8>] {
-    debug_assert_eq!(image.len() % 3, 0);
     let slice_start = bucket_size*bucket_index*3;
     let slice_end = bucket_size*(bucket_index+1)*3;
     let bucket = image.get_mut(slice_start..slice_end).expect("Guaranteed to be in bounds");
@@ -67,7 +66,7 @@ fn bucket_from_image_mut(image: &mut [u8], bucket_size: usize, bucket_index: usi
     // which is the same representation as `Rgb<u8>` ([u8; 3]).
     //
     // The slice is guaranteed to be within `image`, as `bucket.len()/3` rounds down.
-    // e.g. if `bucket.len() == 8`, the returned slice, will have a length of 2.
+    // e.g. if `bucket.len() == 8`, the returned slice, will have a length of 2 (6 bytes).
     unsafe { std::slice::from_raw_parts_mut(bucket.as_mut_ptr().cast(), bucket.len()/3) }
 }
 
