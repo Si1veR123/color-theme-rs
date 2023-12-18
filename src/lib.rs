@@ -56,16 +56,19 @@ fn average_pixels(pixels: &[Rgb<u8>]) -> Rgb<u8> {
     Rgb::from(pixel_values_average)
 }
 
-/// SAFETY: `image` length must be a multiple of 3
-unsafe fn bucket_from_image_mut(image: &mut [u8], bucket_size: usize, bucket_index: usize) -> &mut [Rgb<u8>] {
+
+fn bucket_from_image_mut(image: &mut [u8], bucket_size: usize, bucket_index: usize) -> &mut [Rgb<u8>] {
     debug_assert_eq!(image.len() % 3, 0);
     let slice_start = bucket_size*bucket_index*3;
     let slice_end = bucket_size*(bucket_index+1)*3;
     let bucket = image.get_mut(slice_start..slice_end).expect("Guaranteed to be in bounds");
 
     // SAFETY: `bucket` should consist of chunks of 3 contiguous `u8`s,
-    // which is the same representation as `Rgb<u8>` ([u8; 3])
-    std::slice::from_raw_parts_mut(bucket.as_mut_ptr().cast(), bucket.len()/3)
+    // which is the same representation as `Rgb<u8>` ([u8; 3]).
+    //
+    // The slice is guaranteed to be within `image`, as `bucket.len()/3` rounds down.
+    // e.g. if `bucket.len() == 8`, the returned slice, will have a length of 2.
+    unsafe { std::slice::from_raw_parts_mut(bucket.as_mut_ptr().cast(), bucket.len()/3) }
 }
 
 /// https://en.wikipedia.org/wiki/Median_cut
@@ -82,8 +85,7 @@ pub fn median_cut_palette(rgb_image: &mut RgbImage, palette_n: u8) -> Vec<Rgb<u8
         bucket_size = pixel_count / bucket_count;
 
         for bucket_index in 0..bucket_count {
-            // SAFETY: `rgb_image` derefs to `[u8]` which has a length of a multiple of 3
-            let bucket_pixels = unsafe { bucket_from_image_mut(rgb_image, bucket_size, bucket_index) };
+            let bucket_pixels = bucket_from_image_mut(rgb_image, bucket_size, bucket_index);
             median_cut_sort_bucket(bucket_pixels);
         }
     }
@@ -91,8 +93,7 @@ pub fn median_cut_palette(rgb_image: &mut RgbImage, palette_n: u8) -> Vec<Rgb<u8
     debug_assert!(bucket_count >= palette_n as usize);
     let mut colours = Vec::with_capacity(palette_n as usize);
     for bucket_index in 0..palette_n as usize {
-        // SAFETY: same as previous usage
-        let bucket_pixels = unsafe { bucket_from_image_mut(rgb_image, bucket_size, bucket_index) };
+        let bucket_pixels = bucket_from_image_mut(rgb_image, bucket_size, bucket_index);
         colours.push(average_pixels(&bucket_pixels));
     }
 
