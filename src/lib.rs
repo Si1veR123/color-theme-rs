@@ -3,22 +3,22 @@ use image::{RgbImage, Rgb};
 /// Sort the pixels by the colour channel with the most range
 fn median_cut_sort_bucket(pixel_bucket: &mut [Rgb<u8>]) {
     let mut r_minmax = (u8::MAX, 0);
-    let mut b_minmax = (u8::MAX, 0);
     let mut g_minmax = (u8::MAX, 0);
+    let mut b_minmax = (u8::MAX, 0);
 
     for pixel in pixel_bucket.iter() {
         let r_val = pixel.0[0];
-        let b_val = pixel.0[1];
-        let g_val = pixel.0[2];
+        let g_val = pixel.0[1];
+        let b_val = pixel.0[2];
 
         r_minmax.0 = r_minmax.0.min(r_val);
         r_minmax.1 = r_minmax.1.max(r_val);
 
-        b_minmax.0 = b_minmax.0.min(b_val);
-        b_minmax.1 = b_minmax.1.max(b_val);
-
         g_minmax.0 = g_minmax.0.min(g_val);
         g_minmax.1 = g_minmax.1.max(g_val);
+
+        b_minmax.0 = b_minmax.0.min(b_val);
+        b_minmax.1 = b_minmax.1.max(b_val);
     }
 
 
