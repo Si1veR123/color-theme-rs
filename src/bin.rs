@@ -16,7 +16,6 @@ macro_rules! usage_err {
 enum UsageError {
     NoFilename,
     FileNotFound,
-    InvalidImageFormat,
     InvalidPaletteCount,
     InvalidBrightness
 }
@@ -38,11 +37,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let filename = cli_args.next()
         .ok_or_else(|| usage_err!(UsageError::NoFilename) )?;
-    let mut image = image::open(filename)
+    let image = image::open(filename)
         .map_err(|_| usage_err!(UsageError::FileNotFound))?;
 
-    let rgb_image = image.as_mut_rgb8()
-        .ok_or_else(|| usage_err!(UsageError::InvalidImageFormat))?;
+    let mut rgb_image = image.into_rgb8();
 
     let palette_n = match cli_args.next() {
         Some(s) => s.parse::<u8>().map_err(|_| usage_err!(UsageError::InvalidPaletteCount))?,
@@ -54,7 +52,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         None => 200
     };
 
-    let colours = median_cut_palette(rgb_image, palette_n);
+    let colours = median_cut_palette(&mut rgb_image, palette_n);
 
     // Only None if `palette_n` is 0
     let theme = get_theme_colour(&colours, Some(target_brightness))
