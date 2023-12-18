@@ -1,47 +1,70 @@
-use image::{DynamicImage, ImageError};
+use std::{env, error::Error, fmt::Display};
+use image::Rgb;
+use palette_from_image::{get_theme_colour, median_cut_palette};
 
-mod lib;
-use lib::{get_theme_colour, median_cut_palette, format_rgb};
 
-fn out_usage_and_quit() -> ! {
-    println!("\nUsage: colour_theme.exe [ARGS]\n\t<filename/path>\n\t<# of palette colours> (power of 2, optional)\n\t<theme brightness> (0-255, optional)\n");
-    panic!()
+macro_rules! usage_err {
+    ($err: expr) => {
+        {
+            println!("\nUsage: colour_theme <FILENAME> <PALETTE COLOUR COUNT (1-255, optional)>  <BRIGHTNESS (0-255, optional)>");
+            $err
+        }
+    };
 }
 
-fn get_image_from_cli() -> Result<DynamicImage, ImageError> {
-    let filename = std::env::args().nth(1).unwrap_or_else(|| out_usage_and_quit());
-    Ok(image::open(filename)?)
+#[derive(Debug)]
+enum UsageError {
+    NoFilename,
+    FileNotFound,
+    InvalidImageFormat,
+    InvalidPaletteCount,
+    InvalidBrightness
 }
 
+impl Display for UsageError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
-fn main() {
-    let image = get_image_from_cli().expect("Can't find file");
-    let rgb_image = image.as_rgb8().expect("Invalid format");
+impl Error for UsageError {}
 
-    let palette_n: u8 = match std::env::args().nth(2) {
-        Some(s) => s.parse().unwrap(),
+pub fn format_rgb(pixel: Rgb<u8>) -> String {
+    format!("rgb({}, {}, {})", pixel.0[0], pixel.0[1], pixel.0[2])
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let mut cli_args = env::args().skip(1);
+
+    let filename = cli_args.next()
+        .ok_or_else(|| usage_err!(UsageError::NoFilename) )?;
+    let mut image = image::open(filename)
+        .map_err(|_| usage_err!(UsageError::FileNotFound))?;
+
+    let rgb_image = image.as_mut_rgb8()
+        .ok_or_else(|| usage_err!(UsageError::InvalidImageFormat))?;
+
+    let palette_n = match cli_args.next() {
+        Some(s) => s.parse::<u8>().map_err(|_| usage_err!(UsageError::InvalidPaletteCount))?,
         None => 16
     };
 
-    let target_brightness: u8 = match std::env::args().nth(3) {
-        Some(s) => s.parse().unwrap(),
+    let target_brightness = match cli_args.next() {
+        Some(s) => s.parse::<u8>().map_err(|_| usage_err!(UsageError::InvalidBrightness))?,
         None => 200
     };
 
     let colours = median_cut_palette(rgb_image, palette_n);
 
-    let theme = get_theme_colour(&colours, Some(target_brightness));
-    let palette_formatted: Vec<String> = colours.iter().map(
-        |colour| {
-            format_rgb(colour)
-        }
-    ).collect();
+    // Only None if `palette_n` is 0
+    let theme = get_theme_colour(&colours, Some(target_brightness))
+        .ok_or_else(|| usage_err!(UsageError::InvalidPaletteCount))?;
 
-    print!("Palette:");
-    for c in palette_formatted {
-        print!(" {} ", c);
-    }
-    println!("");
+    let palette_formatted: Vec<String> = colours.iter().copied().map(format_rgb).collect();
+    let palette_string = palette_formatted.join(", ");
 
-    println!("Theme colour: {}", format_rgb(&theme));
+    println!("Palette: {palette_string}");
+    println!("Theme colour: {}", format_rgb(theme));
+
+    Ok(())
 }
