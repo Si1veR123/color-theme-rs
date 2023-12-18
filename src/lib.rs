@@ -118,9 +118,9 @@ fn change_brightness(pixel: Rgb<u8>, target_brightness: u8) -> Rgb<u8> {
     Rgb::from(new_values)
 }
 
+/// Choose most saturated colour in palette,
+/// and adjust brightness.
 pub fn get_theme_colour(palette: &[Rgb<u8>], brightness: Option<u8>) -> Option<Rgb<u8>> {
-    // choose most saturated colour in palette
-
     let theme = *palette.iter().max_by_key(|&&x| calculate_saturation(x))?;
 
     Some(match brightness {
