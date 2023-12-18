@@ -1,6 +1,6 @@
 use std::{env, error::Error, fmt::Display};
 use image::Rgb;
-use palette_from_image::{get_theme_color, median_cut_palette};
+use color_theme::{get_theme_color, median_cut_palette};
 
 
 macro_rules! usage_err {
