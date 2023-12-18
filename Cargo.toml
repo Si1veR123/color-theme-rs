@@ -1,15 +1,20 @@
 [package]
-name = "rust-palette-from-image"
+name = "color-theme"
 version = "0.1.0"
 edition = "2021"
+description = "A CLI tool to extract a colour 'palette' and theme color from an image."
+license = "MIT"
+keywords = ["image", "color", "theme", "palette", "quantization"]
+categories = ["graphics", "multimedia::images"]
+repository = "https://github.com/Si1veR123/color-theme-rs"
 
 [lib]
 path = "src/lib.rs"
-name = "palette_from_image"
+name = "color_theme"
 
 [dependencies]
 image = "0.24.5"
 
 [[bin]]
-name = "colour_theme"
+name = "color-theme"
 path = "src/bin.rs"

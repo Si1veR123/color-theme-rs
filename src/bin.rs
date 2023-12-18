@@ -1,12 +1,12 @@
 use std::{env, error::Error, fmt::Display};
 use image::Rgb;
-use palette_from_image::{get_theme_colour, median_cut_palette};
+use palette_from_image::{get_theme_color, median_cut_palette};
 
 
 macro_rules! usage_err {
     ($err: expr) => {
         {
-            println!("\nUsage: colour_theme <FILENAME> <PALETTE COLOUR COUNT (1-255, optional)>  <BRIGHTNESS (0-255, optional)>");
+            println!("\nUsage: color-theme <FILENAME> <PALETTE COLOR COUNT (1-255, optional)>  <BRIGHTNESS (0-255, optional)>");
             $err
         }
     };
@@ -52,17 +52,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         None => 200
     };
 
-    let colours = median_cut_palette(&mut rgb_image, palette_n);
+    let colors = median_cut_palette(&mut rgb_image, palette_n);
 
     // Only None if `palette_n` is 0
-    let theme = get_theme_colour(&colours, Some(target_brightness))
+    let theme = get_theme_color(&colors, Some(target_brightness))
         .ok_or_else(|| usage_err!(UsageError::InvalidPaletteCount))?;
 
-    let palette_formatted: Vec<String> = colours.iter().copied().map(format_rgb).collect();
+    let palette_formatted: Vec<String> = colors.iter().copied().map(format_rgb).collect();
     let palette_string = palette_formatted.join(", ");
 
     println!("Palette: {palette_string}");
-    println!("Theme colour: {}", format_rgb(theme));
+    println!("Theme color: {}", format_rgb(theme));
 
     Ok(())
 }
